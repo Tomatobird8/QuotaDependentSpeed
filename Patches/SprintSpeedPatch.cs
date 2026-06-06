@@ -1,5 +1,6 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace QuotaDependentSpeed.Patches
@@ -9,7 +10,7 @@ namespace QuotaDependentSpeed.Patches
     {
         static float value = 1f;
 
-        static float previousSpeed;
+        private static Dictionary<PlayerControllerB, float> previousPlayerMovementSpeeds = new Dictionary<PlayerControllerB, float>();
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.UpdateProfitQuotaCurrentTime))]
         [HarmonyPostfix]
@@ -20,34 +21,36 @@ namespace QuotaDependentSpeed.Patches
 
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
         [HarmonyPrefix]
-        private static void UpdatePrefix(ref bool ___isPlayerControlled, ref float ___movementSpeed)
+        private static void UpdatePrefix(PlayerControllerB __instance, ref bool ___isPlayerControlled, ref float ___movementSpeed)
         {
-            if (!___isPlayerControlled || StartOfRound.Instance.isChallengeFile)
+            if (StartOfRound.Instance.isChallengeFile)
             {
                 return;
             }
-            previousSpeed = ___movementSpeed;
+            previousPlayerMovementSpeeds[__instance] = ___movementSpeed;
+            if (!___isPlayerControlled)
+            {
+                return;
+            }
             ___movementSpeed *= value;
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
         [HarmonyPostfix]
-        private static void UpdatePostfix(ref bool ___isPlayerControlled, ref float ___movementSpeed)
+        private static void UpdatePostfix(PlayerControllerB __instance, ref bool ___isPlayerControlled, ref float ___movementSpeed)
         {
-            if (!___isPlayerControlled || StartOfRound.Instance.isChallengeFile)
+            if (StartOfRound.Instance.isChallengeFile)
             {
                 return;
             }
-            ___movementSpeed = previousSpeed;
+
+            if (previousPlayerMovementSpeeds.ContainsKey(__instance))
+            ___movementSpeed = previousPlayerMovementSpeeds[__instance];
         }
 
         static float CalculateSpeed()
         {
             float ratio = (float)TimeOfDay.Instance.profitQuota / QuotaDependentSpeed.quotaBaseValue.Value;
-            QuotaDependentSpeed.Logger.LogDebug(ratio);
-            QuotaDependentSpeed.Logger.LogDebug("pow:");
-            QuotaDependentSpeed.Logger.LogDebug(Mathf.Pow(ratio, QuotaDependentSpeed.quotaEffectScaler.Value));
-            QuotaDependentSpeed.Logger.LogDebug("result: " + Mathf.Clamp(Mathf.Pow(ratio, QuotaDependentSpeed.quotaEffectScaler.Value), QuotaDependentSpeed.minSpeedMultiplier.Value, QuotaDependentSpeed.maxSpeedMultiplier.Value));
             return Mathf.Clamp(Mathf.Pow(ratio, QuotaDependentSpeed.quotaEffectScaler.Value), QuotaDependentSpeed.minSpeedMultiplier.Value, QuotaDependentSpeed.maxSpeedMultiplier.Value);
         }
     }
