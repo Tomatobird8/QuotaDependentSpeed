@@ -14,11 +14,19 @@ namespace QuotaDependentSpeed
 
         public static ConfigEntry<int> quotaBaseValue = null!;
 
-        public static ConfigEntry<float> quotaEffectScaler = null!;
+        public static ConfigEntry<float> quotaEffectScalar = null!;
 
         public static ConfigEntry<float> minSpeedMultiplier = null!;
 
         public static ConfigEntry<float> maxSpeedMultiplier = null!;
+
+        public static ConfigEntry<bool> inversed = null!;
+
+        public static ConfigEntry<bool> randomSpeed = null!;
+
+        public static ConfigEntry<bool> displayMultiplier = null!;
+
+        public static float currentRatio = 0;
 
         private void Awake()
         {
@@ -27,11 +35,17 @@ namespace QuotaDependentSpeed
 
             quotaBaseValue = Config.Bind<int>("General", "QuotaBaseValue", 1000, "The value of quota");
 
-            quotaEffectScaler = Config.Bind<float>("General", "QuotaEffectScaler", 0.5f, "How strongly the difference from QuotaBaseValue affects player speed.");
+            quotaEffectScalar = Config.Bind<float>("General", "QuotaEffectScalar", 0.5f, "How strongly the difference from QuotaBaseValue affects player speed.");
 
-            minSpeedMultiplier = Config.Bind<float>("General", "MinSpeedMultiplier", 0.01f, "How slow should the player be at slowest?");
+            minSpeedMultiplier = Config.Bind<float>("General", "MinSpeedMultiplier", 0.01f, "Minimum player speed multiplier.");
 
-            maxSpeedMultiplier = Config.Bind<float>("General", "MaxSpeedMultiplier", 999f, "How fast should the player be at fastest?");
+            maxSpeedMultiplier = Config.Bind<float>("General", "MaxSpeedMultiplier", 999f, "Maximum player speed multiplier.");
+
+            inversed = Config.Bind<bool>("General", "Decrease speed", false, "Decrease player speed as quota increases.");
+
+            randomSpeed = Config.Bind<bool>("General", "Random speed", false, "Choose a random speed instead of using the quota to calculate speed. Use min & max speed multipliers to set the limits. Random speed is independent from quota value. Scalar still affects the intensity.");
+
+            displayMultiplier = Config.Bind<bool>("General", "Display multiplier", true, "Should the multiplier be displayed in the HUD during gameplay?");
 
             Patch();
 
