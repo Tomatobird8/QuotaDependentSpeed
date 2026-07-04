@@ -16,7 +16,8 @@ namespace QuotaDependentSpeed.Patches
 
         private static TextMeshProUGUI? speedDisplay;
 
-        [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.UpdateProfitQuotaCurrentTime))]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnPlayerConnectedClientRpc))]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.PassTimeToNextDay))]
         [HarmonyPostfix]
         private static void UpdateValue()
         {
@@ -34,6 +35,9 @@ namespace QuotaDependentSpeed.Patches
                 speedDisplay.tag = weightCounter.tag;
                 speedDisplay.alignment = weightCounter.alignment;
                 speedDisplay.color = weightCounter.color;
+                speedDisplay.colorGradient = weightCounter.colorGradient;
+                speedDisplay.enableVertexGradient = weightCounter.enableVertexGradient;
+                speedDisplay.characterSpacing = weightCounter.characterSpacing;
                 speedDisplay.font = weightCounter.font;
                 speedDisplay.fontSize = weightCounter.fontSize;
                 speedDisplay.fontStyle = weightCounter.fontStyle;
@@ -45,11 +49,6 @@ namespace QuotaDependentSpeed.Patches
                 speedDisplay.transform.position = weightCounter.transform.position;
                 speedDisplay.text = "text";
                 RectTransform speedDisplayTransform = speedDisplay.GetComponent<RectTransform>();
-                if (speedDisplayTransform == null)
-                {
-                    QuotaDependentSpeed.Logger.LogError("Transform not found");
-                    return;
-                }
                 speedDisplayTransform.offsetMin = weightCounter.GetComponent<RectTransform>().offsetMin;
                 speedDisplayTransform.offsetMax = weightCounter.GetComponent<RectTransform>().offsetMax;
                 speedDisplayTransform.anchoredPosition = new Vector2(67, -32);
@@ -64,6 +63,23 @@ namespace QuotaDependentSpeed.Patches
             float speedValue = QuotaDependentSpeed.currentRatio * 100f;
             string displayText = speedValue >= 1000 ? speedValue.ToString("F0") : speedValue.ToString("F2");
             speedDisplay.text = $"{displayText}%";
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.SceneManager_OnLoad))]
+        [HarmonyPostfix]
+        private static void SceneManager_OnLoad_Postfix(ref string sceneName)
+        {
+            if (sceneName.ToLower().Contains("companybuilding") && QuotaDependentSpeed.setSpeedOnCompany.Value) // TODO: configurable list of moons
+            {
+                value = QuotaDependentSpeed.companySpeed.Value;
+                QuotaDependentSpeed.currentRatio = QuotaDependentSpeed.companySpeed.Value;
+                if (speedDisplay != null)
+                {
+                    float speedValue = QuotaDependentSpeed.currentRatio * 100f;
+                    string displayText = speedValue >= 1000 ? speedValue.ToString("F0") : speedValue.ToString("F2");
+                    speedDisplay.text = $"{displayText}%";
+                }
+            }
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]

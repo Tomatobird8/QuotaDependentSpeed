@@ -26,6 +26,10 @@ namespace QuotaDependentSpeed
 
         public static ConfigEntry<bool> displayMultiplier = null!;
 
+        public static ConfigEntry<bool> setSpeedOnCompany = null!;
+
+        public static ConfigEntry<float> companySpeed = null!;
+
         public static float currentRatio = 0;
 
         private void Awake()
@@ -46,6 +50,10 @@ namespace QuotaDependentSpeed
             randomSpeed = Config.Bind<bool>("General", "Random speed", false, "Choose a random speed instead of using the quota to calculate speed. Use min & max speed multipliers to set the limits. Random speed is independent from quota value. Scalar still affects the intensity.");
 
             displayMultiplier = Config.Bind<bool>("General", "Display multiplier", true, "Should the multiplier be displayed in the HUD during gameplay?");
+
+            setSpeedOnCompany = Config.Bind<bool>("General", "Set speed on company", true, "Set a static speed value on company. Speed multipliers will not apply.");
+
+            companySpeed = Config.Bind<float>("General", "Company speed multiplier", 1.0f, "Static speed multiplier on company.");
 
             Patch();
 
