@@ -18,6 +18,7 @@ namespace QuotaDependentSpeed.Patches
 
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.OnPlayerConnectedClientRpc))]
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.PassTimeToNextDay))]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.SetTimeAndPlanetToSavedSettings))]
         [HarmonyPostfix]
         private static void UpdateValue()
         {
